@@ -1,13 +1,24 @@
 # Validation record
 
-The current revision runs Python directly on the Ubuntu host. Docker Compose defines only MySQL and the three MongoDB services.
+## Host Python integration verified
 
-## Verification
+[GitHub Actions run 39252990522](https://github.com/WaqasSaleem97/Databases/actions/runs/39252990522) completed successfully on 19 October 2026 for source commit `7a5202784c19344083098568dee44e13ab98a148`.
 
-- The 15 offline tests cover profile selection, required settings, literal password characters, safe error messages and blocking MongoDB writes when the database marker is wrong or missing.
-- The live smoke test covers eight successful stage/environment combinations and three expected failures, using the host-published ports.
-- The GitHub Actions workflow installs Python drivers on its host runner and runs the same offline and live checks against the database containers.
+Python 3.12 ran directly on the runner host. Docker Compose started only MySQL and the three MongoDB database services.
 
-The preparation machine has no Docker engine. The live result for this host-based revision will be recorded after its GitHub Actions run completes.
+- Python database drivers installed successfully on the host.
+- All 15 offline configuration and mocked database-boundary tests passed.
+- The four database services initialized and passed their health checks.
+- Host-side credential file preparation succeeded.
+- All 11 live scenarios passed: MySQL, hardcoded MongoDB, three environment-variable profiles, three credential-file profiles, wrong-password rejection, missing-password rejection, and marker-mismatch write prevention.
+- Disposable database services and volumes were removed after verification.
 
-Students can run `python -m unittest discover -s tests -v` and `python smoke_test.py` from their active host virtual environment after starting the databases and preparing the local credential files.
+## Configuration and documentation checks
+
+- Host endpoints are `127.0.0.1:3307` for MySQL and `127.0.0.1:27017`, `:27018` and `:27019` for MongoDB dev, test and simulated prod.
+- Profile accounts and passwords agree with the database initialization settings.
+- Python and JavaScript syntax, Compose configuration, health-check shell syntax, and the direct-host CI commands were checked.
+- Lab 4 uses native Python commands, preserves its per-step screenshot format, and lists 33 evidence checks matching `evidence.json`.
+- The Python application container, Dockerfile and Docker build instructions were removed.
+
+Students should run `python -m unittest discover -s tests -v` and `python smoke_test.py` from their active host virtual environment after starting the databases and preparing their local credential files.

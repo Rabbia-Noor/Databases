@@ -1,0 +1,11 @@
+# SIMULATED PRODUCTION ONLY. This container contains no real production data.
+[application]
+environment = prod
+
+[mongodb]
+host = mongo-prod
+port = 27017
+database = school_prod
+username = prod_user
+password = ProdDemoOnly123!
+auth_source = school_prod

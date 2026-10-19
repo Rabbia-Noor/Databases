@@ -1,0 +1,136 @@
+# Disposable local lab only. Every password below is intentionally public dummy data.
+# Run Python through the app container; database service names are its endpoints.
+services:
+  app:
+    build: .
+    profiles: ["tools"]
+    init: true
+    working_dir: /app
+    user: "${LAB_UID:-1000}:${LAB_GID:-1000}"
+    volumes:
+      - ./:/app
+    # Pass only the selected deployment's shell values into this process.
+    environment:
+      - APP_ENV
+      - MONGO_HOST
+      - MONGO_PORT
+      - MONGO_DATABASE
+      - MONGO_USERNAME
+      - MONGO_PASSWORD
+      - MONGO_AUTH_SOURCE
+
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: MysqlAdminOnly123!
+      MYSQL_DATABASE: school_mysql
+      MYSQL_USER: mysql_student
+      MYSQL_PASSWORD: MysqlDemoOnly123!
+    ports:
+      - "127.0.0.1:3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./db-init/mysql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          MYSQL_PWD="$${MYSQL_ROOT_PASSWORD}" mysql -uroot --silent --skip-column-names
+          -e "SELECT 1 FROM school_mysql.environment_info LIMIT 1" > /dev/null
+      interval: 5s
+      timeout: 5s
+      retries: 40
+      start_period: 30s
+
+  mongo-dev:
+    image: mongo:8.0
+    command: ["mongod", "--wiredTigerCacheSizeGB", "0.25"]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: lab_admin
+      MONGO_INITDB_ROOT_PASSWORD: MongoAdminOnly123!
+      MONGO_INITDB_DATABASE: school_dev
+      LAB_ENV: dev
+      LAB_USERNAME: dev_user
+      LAB_PASSWORD: DevDemoOnly123!
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - mongo-dev-data:/data/db
+      - ./db-init/mongo:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          mongosh --quiet --host 127.0.0.1 --username "$${LAB_USERNAME}"
+          --password "$${LAB_PASSWORD}" --authenticationDatabase "$${MONGO_INITDB_DATABASE}"
+          "$${MONGO_INITDB_DATABASE}" --eval
+          'if (db.environment_info.countDocuments({_id: "environment"}) !== 1) { quit(1); }'
+          > /dev/null
+      interval: 5s
+      timeout: 5s
+      retries: 40
+      start_period: 15s
+
+  mongo-test:
+    image: mongo:8.0
+    command: ["mongod", "--wiredTigerCacheSizeGB", "0.25"]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: lab_admin
+      MONGO_INITDB_ROOT_PASSWORD: MongoAdminOnly123!
+      MONGO_INITDB_DATABASE: school_test
+      LAB_ENV: test
+      LAB_USERNAME: test_user
+      LAB_PASSWORD: TestDemoOnly123!
+    ports:
+      - "127.0.0.1:27018:27017"
+    volumes:
+      - mongo-test-data:/data/db
+      - ./db-init/mongo:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          mongosh --quiet --host 127.0.0.1 --username "$${LAB_USERNAME}"
+          --password "$${LAB_PASSWORD}" --authenticationDatabase "$${MONGO_INITDB_DATABASE}"
+          "$${MONGO_INITDB_DATABASE}" --eval
+          'if (db.environment_info.countDocuments({_id: "environment"}) !== 1) { quit(1); }'
+          > /dev/null
+      interval: 5s
+      timeout: 5s
+      retries: 40
+      start_period: 15s
+
+  mongo-prod:
+    image: mongo:8.0
+    command: ["mongod", "--wiredTigerCacheSizeGB", "0.25"]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: lab_admin
+      MONGO_INITDB_ROOT_PASSWORD: MongoAdminOnly123!
+      MONGO_INITDB_DATABASE: school_prod
+      LAB_ENV: prod
+      LAB_USERNAME: prod_user
+      LAB_PASSWORD: ProdDemoOnly123!
+    ports:
+      - "127.0.0.1:27019:27017"
+    volumes:
+      - mongo-prod-data:/data/db
+      - ./db-init/mongo:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          mongosh --quiet --host 127.0.0.1 --username "$${LAB_USERNAME}"
+          --password "$${LAB_PASSWORD}" --authenticationDatabase "$${MONGO_INITDB_DATABASE}"
+          "$${MONGO_INITDB_DATABASE}" --eval
+          'if (db.environment_info.countDocuments({_id: "environment"}) !== 1) { quit(1); }'
+          > /dev/null
+      interval: 5s
+      timeout: 5s
+      retries: 40
+      start_period: 15s
+
+volumes:
+  mysql-data:
+  mongo-dev-data:
+  mongo-test-data:
+  mongo-prod-data:

@@ -1,0 +1,11 @@
+# DISPOSABLE CLASSROOM VALUES. This is plaintext, not encrypted storage.
+[application]
+environment = dev
+
+[mongodb]
+host = mongo-dev
+port = 27017
+database = school_dev
+username = dev_user
+password = DevDemoOnly123!
+auth_source = school_dev

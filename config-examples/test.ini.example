@@ -1,0 +1,11 @@
+# DISPOSABLE CLASSROOM VALUES. This is plaintext, not encrypted storage.
+[application]
+environment = test
+
+[mongodb]
+host = mongo-test
+port = 27017
+database = school_test
+username = test_user
+password = TestDemoOnly123!
+auth_source = school_test

@@ -18,7 +18,7 @@ Python 3.12 ran directly on the runner host. Docker Compose started only MySQL a
 - Host endpoints are `127.0.0.1:3307` for MySQL and `127.0.0.1:27017`, `:27018` and `:27019` for MongoDB dev, test and simulated prod.
 - Profile accounts and passwords agree with the database initialization settings.
 - Python and JavaScript syntax, Compose configuration, health-check shell syntax, and the direct-host CI commands were checked.
-- Lab 4 uses native Python commands, preserves its per-step screenshot format, and lists 33 evidence checks matching `evidence.json`.
+- Lab 4 uses native Python commands and preserves its per-step screenshot format; its required filenames are synchronized with `evidence.json`.
 - The Python application container, Dockerfile and Docker build instructions were removed.
 
 Students should run `python -m unittest discover -s tests -v` and `python smoke_test.py` from their active host virtual environment after starting the databases and preparing their local credential files.

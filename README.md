@@ -27,21 +27,50 @@ All committed credentials are disposable classroom examples. `prod` is a local s
 
 Replace `<your-username>` with your actual GitHub username. Submit the evidence and solution PDF to your separate `DevOps` repository as specified in Lab 4.
 
-## Install Docker, Docker Compose and Python on Ubuntu
+## Install Docker and Docker Compose on Ubuntu
 
-```bash
-sudo apt update
-sudo apt install -y docker.io docker-compose-v2 python3 python3-venv python3-pip
-sudo systemctl enable --now docker
-sudo usermod -aG docker "$USER"
-newgrp docker
-```
+1. Connect to your assigned Ubuntu server.
+
+2. Update the Ubuntu package index and install Docker Engine and `curl`. On Ubuntu, the required package name is `docker.io`:
+
+   ```bash
+   sudo apt update -y
+   sudo apt install -y docker.io curl
+   ```
+
+3. Create the system-wide Docker CLI plug-in directory and download the Docker Compose plug-in for an `x86_64` Ubuntu server:
+
+   ```bash
+   sudo mkdir -p /usr/local/lib/docker/cli-plugins
+   sudo curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose
+   sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+   ```
+
+4. Start the Docker service and add your current Ubuntu account to the `docker` group:
+
+   ```bash
+   sudo systemctl start docker
+   sudo usermod -aG docker $USER
+   exit
+   ```
+
+   Completely sign out of the Ubuntu server and reconnect so that the new group membership takes effect. Opening only a new terminal tab is not sufficient.
+
+5. Reconnect and verify the Git, Docker, and Docker Compose installations:
+
+   ```bash
+   ssh <github-username>@<ubuntu-server-ip>
+   git --version
+   docker --version
+   docker compose version
+   ```
+
+   Do not continue until all three version commands display their installed versions.
 
 ## Prepare the host Python environment
 
-Run these commands from your `Databases` clone:
-
 ```bash
+sudo apt install -y python3 python3-venv python3-pip
 cd ~/Databases
 python3 -m venv .venv
 source .venv/bin/activate
@@ -192,7 +221,7 @@ Find the exact screenshot names, exam questions and submission requirements in [
 ## Official references
 
 - [Ubuntu: docker.io](https://packages.ubuntu.com/noble/docker.io)
-- [Ubuntu: Docker Compose v2](https://packages.ubuntu.com/noble/docker-compose-v2)
+- [Docker: Install the Compose plug-in manually](https://docs.docker.com/compose/install/linux/#install-the-plugin-manually)
 - [Docker: Linux post-installation steps](https://docs.docker.com/engine/install/linux-postinstall/)
 - [Python: virtual environments](https://docs.python.org/3/library/venv.html)
 - [Python: os.environ](https://docs.python.org/3/library/os.html#os.environ)

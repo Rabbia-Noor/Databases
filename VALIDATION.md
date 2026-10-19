@@ -18,8 +18,9 @@ Python 3.12 ran directly on the Ubuntu runner host. Docker Compose ran MySQL and
 
 - Both guides contain the same four Python examples and the same MongoDB connection block.
 - Python and Bash syntax, navigation links and valid URIs for the supplied dev/test/prod accounts were checked.
-- Lab 4 contains seven practical tasks and 22 required screenshot filenames.
+- Lab 4 contains seven practical tasks and 15 required screenshot filenames.
 - The comparison/Git-exclusion task and the PDF-preparation/two-repository-push task, including their seven screenshot entries, were removed.
+- Code-display, password-redaction display and checksum steps, including their seven screenshot entries, were removed.
 - The instructor's `Labs/Lab04` directory contains only `README.md`.
 
 Students edit `db_connect.py` and run `python db_connect.py` directly on Ubuntu. The workflow runs `python tests/verify_connections.py` as instructor verification.

@@ -113,7 +113,6 @@ Replace the contents of **the same `db_connect.py`** with:
 
 <!-- stage: mongo_hardcoded -->
 ```python
-from urllib.parse import quote_plus
 from pymongo import MongoClient
 
 username = "dev_user"
@@ -121,7 +120,7 @@ password = "DevDemoOnly123!"
 endpoint = "127.0.0.1:27017"
 database_name = "school_dev"
 
-uri = "mongodb://" + quote_plus(username) + ":" + quote_plus(password) + "@" + endpoint + "/" + database_name
+uri = "mongodb://" + username + ":" + password + "@" + endpoint + "/" + database_name
 
 client = MongoClient(uri, serverSelectionTimeoutMS=5000)
 database = client[database_name]
@@ -132,7 +131,7 @@ print("Environment:", database.environment_info.find_one()["name"])
 client.close()
 ```
 
-`username`, `password`, `endpoint` and `database_name` hold the connection settings. The `+` operator joins them into `uri`. `quote_plus()` encodes the username and password so that characters such as `@` work inside a URI.
+`username`, `password`, `endpoint` and `database_name` hold the connection settings. The `+` operator joins them into `uri`.
 
 `MongoClient(uri)` creates the client, and `client[database_name]` selects the database. The URI's database is also the authentication database in this lab.
 
@@ -147,7 +146,6 @@ Replace the same file with:
 <!-- stage: mongo_env -->
 ```python
 import os
-from urllib.parse import quote_plus
 from pymongo import MongoClient
 
 username = os.getenv("MONGO_USERNAME")
@@ -158,7 +156,7 @@ database_name = os.getenv("MONGO_DATABASE")
 if not username or not password or not endpoint or not database_name:
     raise SystemExit("Set all four MongoDB environment variables first.")
 
-uri = "mongodb://" + quote_plus(username) + ":" + quote_plus(password) + "@" + endpoint + "/" + database_name
+uri = "mongodb://" + username + ":" + password + "@" + endpoint + "/" + database_name
 
 client = MongoClient(uri, serverSelectionTimeoutMS=5000)
 database = client[database_name]
@@ -246,7 +244,6 @@ Replace the contents of the same `db_connect.py` with:
 ```python
 import os
 import configparser
-from urllib.parse import quote_plus
 from pymongo import MongoClient
 
 config = configparser.ConfigParser(interpolation=None)
@@ -257,7 +254,7 @@ password = config[environment]["password"]
 endpoint = config[environment]["endpoint"]
 database_name = config[environment]["database"]
 
-uri = "mongodb://" + quote_plus(username) + ":" + quote_plus(password) + "@" + endpoint + "/" + database_name
+uri = "mongodb://" + username + ":" + password + "@" + endpoint + "/" + database_name
 
 client = MongoClient(uri, serverSelectionTimeoutMS=5000)
 database = client[database_name]
@@ -281,7 +278,7 @@ export APP_ENV=prod
 python db_connect.py
 ```
 
-This version reads its connection settings from the selected INI section. `interpolation=None` preserves literal `%` characters in file values, and `quote_plus()` encodes the username and password when building the URI.
+This version reads its connection settings from the selected INI section. `interpolation=None` makes the file reader treat values literally. The supplied dummy credentials are joined directly into the URI.
 
 Keep `credentials.ini` local. It is ignored by Git; the example contains public dummy values. Mode `600` restricts the local file to its owner, and an INI file stores plaintext.
 
@@ -294,7 +291,7 @@ Keep `credentials.ini` local. It is ignored by Git; the example contains public 
 | 3. Environment | Add `import os`; read four separate values with `os.getenv()` | Export username, password, endpoint and database |
 | 4. File | Read the same four values with `configparser` | Export `APP_ENV` to select an INI section |
 
-Commit the completed `db_connect.py` to your fork. Submit your screenshots, answers and `Lab4_Solution.pdf` to your `DevOps/Labs/Lab04` directory as described in the course lab.
+Follow the screenshot and submission requirements in [DevOps Lab 4](https://github.com/WaqasSaleem97/DevOps_F26/tree/main/Labs/Lab04).
 
 ## Stop the Databases
 
@@ -314,7 +311,6 @@ See [VALIDATION.md](VALIDATION.md) for the verification status.
 
 - [MySQL Connector/Python: Connecting to MySQL](https://dev.mysql.com/doc/connector-python/en/connector-python-example-connecting.html)
 - [MongoDB: Connect to MongoDB with PyMongo](https://www.mongodb.com/docs/languages/python/pymongo-driver/current/connect/)
-- [MongoDB: Authentication and URI credential encoding](https://www.mongodb.com/docs/languages/python/pymongo-driver/current/security/authentication/scram/)
 - [Python: os.getenv](https://docs.python.org/3/library/os.html#os.getenv)
 - [Python: configparser](https://docs.python.org/3/library/configparser.html)
 - [Python: virtual environments](https://docs.python.org/3/library/venv.html)

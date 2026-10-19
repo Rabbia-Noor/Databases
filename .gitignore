@@ -3,5 +3,4 @@ __pycache__/
 *.pyc
 .env
 .env.*
-config/*.ini
-!config/.gitkeep
+credentials.ini

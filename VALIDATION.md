@@ -1,24 +1,18 @@
-# Validation record
+# Validation Record
 
-## Host Python integration verified
+This revision teaches four short examples by editing only `db_connect.py`:
 
-[GitHub Actions run 39252990522](https://github.com/WaqasSaleem97/Databases/actions/runs/39252990522) completed successfully on 19 October 2026 for source commit `7a5202784c19344083098568dee44e13ab98a148`.
+- MySQL with hardcoded connection arguments.
+- MongoDB with a hardcoded URI and database name.
+- The same MongoDB connection block using `os.getenv()`.
+- The same MongoDB connection block using sections in `credentials.ini`.
 
-Python 3.12 ran directly on the runner host. Docker Compose started only MySQL and the three MongoDB database services.
+Python runs on the Ubuntu host. Compose runs only the four database services.
 
-- Python database drivers installed successfully on the host.
-- All 15 offline configuration and mocked database-boundary tests passed.
-- The four database services initialized and passed their health checks.
-- Host-side credential file preparation succeeded.
-- All 11 live scenarios passed: MySQL, hardcoded MongoDB, three environment-variable profiles, three credential-file profiles, wrong-password rejection, missing-password rejection, and marker-mismatch write prevention.
-- Disposable database services and volumes were removed after verification.
+## Current Verification
 
-## Configuration and documentation checks
+Static syntax, example consistency, screenshot filenames and shell-command checks are run before publishing. Live verification for this simplified revision is pending; the previous multi-file implementation's test results do not apply to this revision.
 
-- Host endpoints are `127.0.0.1:3307` for MySQL and `127.0.0.1:27017`, `:27018` and `:27019` for MongoDB dev, test and simulated prod.
-- Profile accounts and passwords agree with the database initialization settings.
-- Python and JavaScript syntax, Compose configuration, health-check shell syntax, and the direct-host CI commands were checked.
-- Lab 4 uses native Python commands and preserves its per-step screenshot format; its required filenames are synchronized with `evidence.json`.
-- The Python application container, Dockerfile and Docker build instructions were removed.
+The GitHub Actions workflow runs `python tests/verify_connections.py` on the host against the database containers. It checks eight successful connections (MySQL, hardcoded MongoDB, three environment-variable profiles and three file sections), missing-variable rejection, wrong-password rejection and file-source selection.
 
-Students should run `python -m unittest discover -s tests -v` and `python smoke_test.py` from their active host virtual environment after starting the databases and preparing their local credential files.
+Students edit only `db_connect.py` and create their local credential-file copy. The verification harness is instructor support.

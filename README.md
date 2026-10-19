@@ -1,31 +1,14 @@
-# Databases — Python on Ubuntu with Docker databases
+# Python Database Connections — Lab 4
 
-Fork this repository to complete [DevOps Lab 4](https://github.com/WaqasSaleem97/DevOps_F26/tree/main/Labs/Lab04). Write, edit and run the Python code directly on the Ubuntu host. Docker Compose runs MySQL and three MongoDB databases.
+Fork this repository and work in your fork on Ubuntu. **Edit only `db_connect.py`**, replacing its contents at each step. Run the same command every time:
 
-| Stage | Python program | Connection settings |
-| --- | --- | --- |
-| 1 | `01_mysql_hardcoded.py` | Hardcoded MySQL endpoint, username and password |
-| 2 | `02_mongo_hardcoded.py` | Hardcoded MongoDB endpoint, username and password |
-| 3 | `03_mongo_env.py` | Host process environment variables for dev, test and prod |
-| 4 | `04_mongo_file.py` | External host credential files for dev, test and prod |
+```bash
+python db_connect.py
+```
 
-Stages 2–4 reuse the same MongoDB operation in `mongo_demo.py`: check a marker stored in the selected database, save a student, and read students. Every successful run shows the actual endpoint, database name and environment marker. Passwords are not printed.
+Python runs directly on Ubuntu. Docker Compose runs MySQL and three separate MongoDB databases. The supplied accounts are public dummy classroom accounts; `prod` is a local simulation.
 
-All committed credentials are disposable classroom examples. `prod` is a local simulation with a separate database container and data volume.
-
-## Start with your own fork
-
-1. Select **Fork** on [WaqasSaleem97/Databases](https://github.com/WaqasSaleem97/Databases).
-2. Keep the name `Databases` under your own GitHub account.
-3. Clone your fork on the Ubuntu host:
-
-   ```bash
-   cd ~
-   git clone git@github.com:<your-username>/Databases.git
-   cd Databases
-   ```
-
-Replace `<your-username>` with your actual GitHub username. Submit the evidence and solution PDF to your separate `DevOps` repository as specified in Lab 4.
+The full tasks, screenshot filenames and submission requirements are in [DevOps Lab 4](https://github.com/WaqasSaleem97/DevOps_F26/tree/main/Labs/Lab04).
 
 ## Install Docker and Docker Compose on Ubuntu
 
@@ -67,7 +50,9 @@ Replace `<your-username>` with your actual GitHub username. Submit the evidence 
 
    Do not continue until all three version commands display their installed versions.
 
-## Prepare the host Python environment
+   - Save a screenshot showing the three commands and their installed versions as `docker_installation.png`.
+
+## Install Python on Ubuntu
 
 ```bash
 sudo apt install -y python3 python3-venv python3-pip
@@ -77,155 +62,232 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
-Keep this virtual environment active for every `python` command below. After opening a new terminal, return to `~/Databases` and run `source .venv/bin/activate` again. Edit the `.py` files directly in this directory using your editor.
+Use your editor to change `db_connect.py`. Run Python from `~/Databases` with `.venv` active. Activate it again after reconnecting.
 
-## Start the databases
+## Start the Databases
 
 ```bash
 docker compose up -d --wait mysql mongo-dev mongo-test mongo-prod
 docker compose ps
 ```
 
-Compose defines exactly four services. Each database publishes a port on the Ubuntu host's loopback interface, which is the endpoint used by Python:
-
-| Database | Endpoint used by host Python | Database / MongoDB auth source | Username | Dummy password |
+| Database | Host endpoint | Database name | Dummy username | Dummy password |
 | --- | --- | --- | --- | --- |
 | MySQL | `127.0.0.1:3307` | `school_mysql` | `mysql_student` | `MysqlDemoOnly123!` |
 | MongoDB dev | `127.0.0.1:27017` | `school_dev` | `dev_user` | `DevDemoOnly123!` |
 | MongoDB test | `127.0.0.1:27018` | `school_test` | `test_user` | `TestDemoOnly123!` |
 | MongoDB simulated prod | `127.0.0.1:27019` | `school_prod` | `prod_user` | `ProdDemoOnly123!` |
 
-Run Python on the same Ubuntu machine as these published ports. MongoDB users are created inside their corresponding data database, so each profile's `auth_source` matches that database.
+## Step 1: MySQL with Values in the Code
 
-## Stages 1 and 2 — hardcoded connections
+The supplied `db_connect.py` starts with this code. It is the Python equivalent of setting a MySQL username, password and JDBC endpoint:
 
-```bash
-python 01_mysql_hardcoded.py
-python 02_mongo_hardcoded.py
+<!-- stage: mysql -->
+```python
+import mysql.connector
+
+connection = mysql.connector.connect(
+    host="127.0.0.1",
+    port=3307,
+    user="mysql_student",
+    password="MysqlDemoOnly123!",
+    database="school_mysql",
+)
+
+print("Connected to MySQL:", connection.database)
+print("Server:", connection.server_host, connection.server_port)
+cursor = connection.cursor()
+cursor.execute("SELECT environment FROM environment_info")
+print("Environment:", cursor.fetchone()[0])
+cursor.close()
+connection.close()
 ```
 
-The first script shows the MySQL connection and the second shows the MongoDB dev connection. The connection settings in these two files are intentionally hardcoded for the demonstration.
+The host, port and database name correspond to the parts of `jdbc:mysql://host:port/database`. `mysql.connector.connect()` opens the connection. The small query reads an environment value already stored in MySQL, so students can see that a database answered.
 
-## Stage 3 — environment variables on the host
+Run `python db_connect.py`. Expect `Connected to MySQL: school_mysql` and `Environment: dev`.
 
-The script reads the current Python process environment through `os.environ`. It does not automatically load a `.env` file.
+## Step 2: MongoDB with Values in the Code
 
-Select dev, entering its dummy password from the table at the hidden prompt:
+Replace the contents of **the same `db_connect.py`** with:
+
+<!-- stage: mongo_hardcoded -->
+```python
+from pymongo import MongoClient
+
+uri = "mongodb://dev_user:DevDemoOnly123!@127.0.0.1:27017/school_dev"
+database_name = "school_dev"
+
+client = MongoClient(uri, serverSelectionTimeoutMS=5000)
+database = client[database_name]
+database.command("ping")
+print("Connected to MongoDB:", database.name)
+print("Server:", client.address)
+print("Environment:", database.environment_info.find_one()["name"])
+client.close()
+```
+
+`MongoClient(uri)` corresponds to the Java MongoDB client, and `client[database_name]` corresponds to selecting a database with `getDB(...)`. The URI contains the username, password, endpoint and authentication database. The selected database matches that authentication database in this lab.
+
+`database.command("ping")` sends a real request. Creating a client or selecting a database by itself does not prove that a server is reachable. The environment value is read from the selected database. The `5000` option limits server selection to five seconds.
+
+Run `python db_connect.py`. Expect `school_dev`, port `27017` and environment `dev`.
+
+## Step 3: Read Environment Variables with os.getenv()
+
+Replace the same file with:
+
+<!-- stage: mongo_env -->
+```python
+import os
+from pymongo import MongoClient
+
+uri = os.getenv("MONGO_URI")
+database_name = os.getenv("MONGO_DATABASE")
+
+if not uri or not database_name:
+    raise SystemExit("Set MONGO_URI and MONGO_DATABASE first.")
+
+client = MongoClient(uri, serverSelectionTimeoutMS=5000)
+database = client[database_name]
+database.command("ping")
+print("Connected to MongoDB:", database.name)
+print("Server:", client.address)
+print("Environment:", database.environment_info.find_one()["name"])
+client.close()
+```
+
+Only the source of `uri` and `database_name` changes. The MongoDB connection and output lines stay the same. The two-line check explains missing variables rather than allowing a default connection.
+
+Use one complete profile at a time in the same Ubuntu shell. These commands contain **public dummy credentials**. `clear` removes them from the visible terminal before you capture the connection result. Do not print `MONGO_URI` or include the exports in screenshots.
+
+### Dev
+
+```bash
+export MONGO_URI='mongodb://dev_user:DevDemoOnly123!@127.0.0.1:27017/school_dev'
+export MONGO_DATABASE=school_dev
+clear
+python db_connect.py
+```
+
+### Test
+
+```bash
+export MONGO_URI='mongodb://test_user:TestDemoOnly123!@127.0.0.1:27018/school_test'
+export MONGO_DATABASE=school_test
+clear
+python db_connect.py
+```
+
+### Simulated Prod
+
+```bash
+export MONGO_URI='mongodb://prod_user:ProdDemoOnly123!@127.0.0.1:27019/school_prod'
+export MONGO_DATABASE=school_prod
+clear
+python db_connect.py
+```
+
+`os.getenv()` reads the environment of the Python process. Both exports change between profiles; Python reads them again on each run. Changing `APP_ENV` alone has no effect in this version because the code does not read it.
+
+## Step 4: Read a Credentials File
+
+Create one local credential file from the supplied example:
+
+```bash
+cp -n credentials.ini.example credentials.ini
+chmod 600 credentials.ini
+```
+
+It contains three sections:
+
+```ini
+# Public dummy values for the disposable classroom databases only.
+[dev]
+uri = mongodb://dev_user:DevDemoOnly123!@127.0.0.1:27017/school_dev
+database = school_dev
+
+[test]
+uri = mongodb://test_user:TestDemoOnly123!@127.0.0.1:27018/school_test
+database = school_test
+
+[prod]
+uri = mongodb://prod_user:ProdDemoOnly123!@127.0.0.1:27019/school_prod
+database = school_prod
+```
+
+Replace the contents of the same `db_connect.py` with:
+
+<!-- stage: mongo_file -->
+```python
+import os
+import configparser
+from pymongo import MongoClient
+
+config = configparser.ConfigParser(interpolation=None)
+config.read("credentials.ini")
+environment = os.getenv("APP_ENV", "dev")
+uri = config[environment]["uri"]
+database_name = config[environment]["database"]
+
+client = MongoClient(uri, serverSelectionTimeoutMS=5000)
+database = client[database_name]
+database.command("ping")
+print("Connected to MongoDB:", database.name)
+print("Server:", client.address)
+print("Environment:", database.environment_info.find_one()["name"])
+client.close()
+```
+
+`config.read()` loads the INI file, and `config[environment]` chooses its section. `APP_ENV` selects `dev`, `test` or `prod`; if it is unset, the default is `dev`. The URI and database name come from that section. The MongoDB connection and output lines remain unchanged.
 
 ```bash
 export APP_ENV=dev
-export MONGO_HOST=127.0.0.1
-export MONGO_PORT=27017
-export MONGO_DATABASE=school_dev
-export MONGO_USERNAME=dev_user
-export MONGO_AUTH_SOURCE=school_dev
-read -r -s -p "Dev database password: " MONGO_PASSWORD
-echo
-export MONGO_PASSWORD
-python 03_mongo_env.py
-```
+python db_connect.py
 
-Select test:
-
-```bash
 export APP_ENV=test
-export MONGO_HOST=127.0.0.1
-export MONGO_PORT=27018
-export MONGO_DATABASE=school_test
-export MONGO_USERNAME=test_user
-export MONGO_AUTH_SOURCE=school_test
-read -r -s -p "Test database password: " MONGO_PASSWORD
-echo
-export MONGO_PASSWORD
-python 03_mongo_env.py
-```
+python db_connect.py
 
-Select simulated prod:
-
-```bash
 export APP_ENV=prod
-export MONGO_HOST=127.0.0.1
-export MONGO_PORT=27019
-export MONGO_DATABASE=school_prod
-export MONGO_USERNAME=prod_user
-export MONGO_AUTH_SOURCE=school_prod
-read -r -s -p "Simulated prod database password: " MONGO_PASSWORD
-echo
-export MONGO_PASSWORD
-python 03_mongo_env.py
+python db_connect.py
 ```
 
-Supply the complete matching profile. `APP_ENV` is a label and consistency check; changing it alone does not select different credentials. Missing values cause an error instead of a fallback to another environment.
+This version does not read `MONGO_URI` or `MONGO_DATABASE`. `interpolation=None` lets a literal `%` in the file remain a literal character; credentials inside a URI still require correct URI encoding.
 
-A successful test run includes the following connection details:
+Keep `credentials.ini` local. It is ignored by Git; the example contains public dummy values. Mode `600` restricts the local file to its owner, and an INI file stores plaintext.
 
-```text
-Configuration source: process environment variables
-Connected to: test | 127.0.0.1:27018
-Database: school_test | marker: test
-```
+## What Students Change
 
-The student records and PASS message follow. The marker is read from MongoDB itself.
+| Stage | Change in `db_connect.py` | How to choose the target |
+| --- | --- | --- |
+| 1. MySQL | Start with the supplied MySQL connection | Values in the code |
+| 2. MongoDB | Replace MySQL with the short MongoDB example | Values in the code |
+| 3. Environment | Add `import os`; load two values with `os.getenv()` | Export `MONGO_URI` and `MONGO_DATABASE` |
+| 4. File | Load the same two values with `configparser` | Export `APP_ENV` to select an INI section |
 
-## Stage 4 — external credential files on the host
+Commit the completed `db_connect.py` to your fork. Submit your screenshots, answers and `Lab4_Solution.pdf` to your `DevOps/Labs/Lab04` directory as described in the course lab.
 
-```bash
-python prepare_config.py
-python 04_mongo_file.py --env dev
-python 04_mongo_file.py --env test
-python 04_mongo_file.py --env prod
-```
-
-The preparation command copies the supplied dummy templates into `config/dev.ini`, `config/test.ini` and `config/prod.ini`, preserving any existing files. Edit those files directly on the host when demonstrating external configuration. Generated credential files remain ignored by Git.
-
-File mode reads the selected file and ignores MongoDB variables left in the terminal. Python's `ConfigParser(interpolation=None)` keeps `%` characters literal. These INI files are plaintext, so externalizing configuration does not encrypt a password or replace a production secret-management service.
-
-## Verify the connections
-
-Run the offline checks and then the live checks from the active host virtual environment:
-
-```bash
-python -m unittest discover -s tests -v
-python smoke_test.py
-```
-
-The live smoke test checks MySQL, hardcoded MongoDB, all three environment-variable profiles, all three credential files, and three expected failure cases: 11 scenarios in total. It expects the original dummy accounts and templates. The GitHub Actions workflow runs Python directly on its host runner against the four Docker database services as well.
-
-## Stop or reset the databases
+## Stop the Databases
 
 ```bash
 docker compose down
 ```
 
-To erase this Compose project's disposable data volumes and initialize fresh data:
+Initialization scripts create the dummy accounts and environment markers on the first start of empty volumes. To intentionally reset this disposable lab, `docker compose down -v` also deletes its database data.
 
-```bash
-docker compose down -v
-docker compose up -d --wait mysql mongo-dev mongo-test mongo-prod
-```
+## Instructor Verification
 
-Initialization scripts run for an empty database data directory. Editing initialization variables does not rotate an account already stored in an existing volume.
+The automated workflow runs the four examples above directly on the runner host against the database containers. It tests MySQL, hardcoded MongoDB, all three environment profiles and all three INI sections, plus missing-variable and rejected-password cases. These verification files are not part of the student's editing task.
 
-## Files
+See [VALIDATION.md](VALIDATION.md) for the verification status.
 
-- `compose.yaml`: MySQL and the three MongoDB database services.
-- `requirements.txt`: drivers installed in the host Python virtual environment.
-- `01_*` through `04_*`: Python entry points run directly on Ubuntu.
-- `settings.py`, `mongo_demo.py`: configuration readers and the shared MongoDB operation.
-- `db-init/`: database users, markers and seed student records.
-- `config-examples/`: public dummy templates; editable copies stay local under `config/`.
-- `tests/`, `smoke_test.py`, `.github/workflows/verify.yml`: offline and live verification.
+## Official References
 
-Find the exact screenshot names, exam questions and submission requirements in [Lab 4](https://github.com/WaqasSaleem97/DevOps_F26/blob/main/Labs/Lab04/README.md).
-
-## Official references
-
-- [Ubuntu: docker.io](https://packages.ubuntu.com/noble/docker.io)
-- [Docker: Install the Compose plug-in manually](https://docs.docker.com/compose/install/linux/#install-the-plugin-manually)
-- [Docker: Linux post-installation steps](https://docs.docker.com/engine/install/linux-postinstall/)
-- [Python: virtual environments](https://docs.python.org/3/library/venv.html)
-- [Python: os.environ](https://docs.python.org/3/library/os.html#os.environ)
-- [MySQL Connector/Python: Connecting](https://dev.mysql.com/doc/connector-python/en/connector-python-example-connecting.html)
-- [MongoDB: Create a MongoClient](https://www.mongodb.com/docs/languages/python/pymongo-driver/current/connect/mongoclient/)
+- [MySQL Connector/Python: Connecting to MySQL](https://dev.mysql.com/doc/connector-python/en/connector-python-example-connecting.html)
+- [MongoDB: Connect to MongoDB with PyMongo](https://www.mongodb.com/docs/languages/python/pymongo-driver/current/connect/)
+- [Python: os.getenv](https://docs.python.org/3/library/os.html#os.getenv)
 - [Python: configparser](https://docs.python.org/3/library/configparser.html)
-- [OWASP: Secrets Management](https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html)
+- [Python: virtual environments](https://docs.python.org/3/library/venv.html)
+- [Docker: Install the Compose plugin manually](https://docs.docker.com/compose/install/linux/#install-the-plugin-manually)
+- [Docker: Linux post-installation steps](https://docs.docker.com/engine/install/linux-postinstall/)
+- [Git: gitignore](https://git-scm.com/docs/gitignore)

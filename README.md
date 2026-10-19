@@ -80,7 +80,7 @@ docker compose ps
 
 ## Step 1: MySQL with Values in the Code
 
-The supplied `db_connect.py` starts with this code. It is the Python equivalent of setting a MySQL username, password and JDBC endpoint:
+The supplied `db_connect.py` starts with this short MySQL connection:
 
 <!-- stage: mysql -->
 ```python
@@ -103,7 +103,7 @@ cursor.close()
 connection.close()
 ```
 
-The host, port and database name correspond to the parts of `jdbc:mysql://host:port/database`. `mysql.connector.connect()` opens the connection. The small query reads an environment value already stored in MySQL, so students can see that a database answered.
+`user` and `password` supply the database credentials. `host` identifies the server, `port` identifies its MySQL service, and `database` selects the database. `mysql.connector.connect()` opens the connection. The small query reads an environment value stored in MySQL, so students can see that a database answered.
 
 Run `python db_connect.py`. Expect `Connected to MySQL: school_mysql` and `Environment: dev`.
 
@@ -113,10 +113,15 @@ Replace the contents of **the same `db_connect.py`** with:
 
 <!-- stage: mongo_hardcoded -->
 ```python
+from urllib.parse import quote_plus
 from pymongo import MongoClient
 
-uri = "mongodb://dev_user:DevDemoOnly123!@127.0.0.1:27017/school_dev"
+username = "dev_user"
+password = "DevDemoOnly123!"
+endpoint = "127.0.0.1:27017"
 database_name = "school_dev"
+
+uri = "mongodb://" + quote_plus(username) + ":" + quote_plus(password) + "@" + endpoint + "/" + database_name
 
 client = MongoClient(uri, serverSelectionTimeoutMS=5000)
 database = client[database_name]
@@ -127,7 +132,9 @@ print("Environment:", database.environment_info.find_one()["name"])
 client.close()
 ```
 
-`MongoClient(uri)` corresponds to the Java MongoDB client, and `client[database_name]` corresponds to selecting a database with `getDB(...)`. The URI contains the username, password, endpoint and authentication database. The selected database matches that authentication database in this lab.
+`username`, `password`, `endpoint` and `database_name` hold the connection settings. The `+` operator joins them into `uri`. `quote_plus()` encodes the username and password so that characters such as `@` work inside a URI.
+
+`MongoClient(uri)` creates the client, and `client[database_name]` selects the database. The URI's database is also the authentication database in this lab.
 
 `database.command("ping")` sends a real request. Creating a client or selecting a database by itself does not prove that a server is reachable. The environment value is read from the selected database. The `5000` option limits server selection to five seconds.
 
@@ -140,13 +147,18 @@ Replace the same file with:
 <!-- stage: mongo_env -->
 ```python
 import os
+from urllib.parse import quote_plus
 from pymongo import MongoClient
 
-uri = os.getenv("MONGO_URI")
+username = os.getenv("MONGO_USERNAME")
+password = os.getenv("MONGO_PASSWORD")
+endpoint = os.getenv("MONGO_ENDPOINT")
 database_name = os.getenv("MONGO_DATABASE")
 
-if not uri or not database_name:
-    raise SystemExit("Set MONGO_URI and MONGO_DATABASE first.")
+if not username or not password or not endpoint or not database_name:
+    raise SystemExit("Set all four MongoDB environment variables first.")
+
+uri = "mongodb://" + quote_plus(username) + ":" + quote_plus(password) + "@" + endpoint + "/" + database_name
 
 client = MongoClient(uri, serverSelectionTimeoutMS=5000)
 database = client[database_name]
@@ -157,14 +169,16 @@ print("Environment:", database.environment_info.find_one()["name"])
 client.close()
 ```
 
-Only the source of `uri` and `database_name` changes. The MongoDB connection and output lines stay the same. The two-line check explains missing variables rather than allowing a default connection.
+The four settings are read separately with `os.getenv()`. Python then builds `uri` with the same concatenation line used in Step 2. The MongoDB connection and output lines stay the same. The short check stops the program if a required variable is missing.
 
-Use one complete profile at a time in the same Ubuntu shell. These commands contain **public dummy credentials**. `clear` removes them from the visible terminal before you capture the connection result. Do not print `MONGO_URI` or include the exports in screenshots.
+Use one complete profile at a time in the same Ubuntu shell. These commands contain **public dummy credentials**. `clear` removes them from the visible terminal before you capture the connection result. Do not print `MONGO_PASSWORD`, the assembled URI or include the exports in screenshots.
 
 ### Dev
 
 ```bash
-export MONGO_URI='mongodb://dev_user:DevDemoOnly123!@127.0.0.1:27017/school_dev'
+export MONGO_USERNAME=dev_user
+export MONGO_PASSWORD='DevDemoOnly123!'
+export MONGO_ENDPOINT=127.0.0.1:27017
 export MONGO_DATABASE=school_dev
 clear
 python db_connect.py
@@ -173,7 +187,9 @@ python db_connect.py
 ### Test
 
 ```bash
-export MONGO_URI='mongodb://test_user:TestDemoOnly123!@127.0.0.1:27018/school_test'
+export MONGO_USERNAME=test_user
+export MONGO_PASSWORD='TestDemoOnly123!'
+export MONGO_ENDPOINT=127.0.0.1:27018
 export MONGO_DATABASE=school_test
 clear
 python db_connect.py
@@ -182,13 +198,15 @@ python db_connect.py
 ### Simulated Prod
 
 ```bash
-export MONGO_URI='mongodb://prod_user:ProdDemoOnly123!@127.0.0.1:27019/school_prod'
+export MONGO_USERNAME=prod_user
+export MONGO_PASSWORD='ProdDemoOnly123!'
+export MONGO_ENDPOINT=127.0.0.1:27019
 export MONGO_DATABASE=school_prod
 clear
 python db_connect.py
 ```
 
-`os.getenv()` reads the environment of the Python process. Both exports change between profiles; Python reads them again on each run. Changing `APP_ENV` alone has no effect in this version because the code does not read it.
+`os.getenv()` reads the environment of the Python process. Set all four variables for each profile; Python reads them again on each run. Changing `APP_ENV` alone has no effect in this version because the code does not read it.
 
 ## Step 4: Read a Credentials File
 
@@ -204,15 +222,21 @@ It contains three sections:
 ```ini
 # Public dummy values for the disposable classroom databases only.
 [dev]
-uri = mongodb://dev_user:DevDemoOnly123!@127.0.0.1:27017/school_dev
+username = dev_user
+password = DevDemoOnly123!
+endpoint = 127.0.0.1:27017
 database = school_dev
 
 [test]
-uri = mongodb://test_user:TestDemoOnly123!@127.0.0.1:27018/school_test
+username = test_user
+password = TestDemoOnly123!
+endpoint = 127.0.0.1:27018
 database = school_test
 
 [prod]
-uri = mongodb://prod_user:ProdDemoOnly123!@127.0.0.1:27019/school_prod
+username = prod_user
+password = ProdDemoOnly123!
+endpoint = 127.0.0.1:27019
 database = school_prod
 ```
 
@@ -222,13 +246,18 @@ Replace the contents of the same `db_connect.py` with:
 ```python
 import os
 import configparser
+from urllib.parse import quote_plus
 from pymongo import MongoClient
 
 config = configparser.ConfigParser(interpolation=None)
 config.read("credentials.ini")
 environment = os.getenv("APP_ENV", "dev")
-uri = config[environment]["uri"]
+username = config[environment]["username"]
+password = config[environment]["password"]
+endpoint = config[environment]["endpoint"]
 database_name = config[environment]["database"]
+
+uri = "mongodb://" + quote_plus(username) + ":" + quote_plus(password) + "@" + endpoint + "/" + database_name
 
 client = MongoClient(uri, serverSelectionTimeoutMS=5000)
 database = client[database_name]
@@ -239,7 +268,7 @@ print("Environment:", database.environment_info.find_one()["name"])
 client.close()
 ```
 
-`config.read()` loads the INI file, and `config[environment]` chooses its section. `APP_ENV` selects `dev`, `test` or `prod`; if it is unset, the default is `dev`. The URI and database name come from that section. The MongoDB connection and output lines remain unchanged.
+`config.read()` loads the INI file, and `config[environment]` chooses its section. `APP_ENV` selects `dev`, `test` or `prod`; if it is unset, the default is `dev`. The username, password, endpoint and database name come from that section. Python builds `uri` using the same concatenation line as before. The MongoDB connection and output lines remain unchanged.
 
 ```bash
 export APP_ENV=dev
@@ -252,7 +281,7 @@ export APP_ENV=prod
 python db_connect.py
 ```
 
-This version does not read `MONGO_URI` or `MONGO_DATABASE`. `interpolation=None` lets a literal `%` in the file remain a literal character; credentials inside a URI still require correct URI encoding.
+This version reads its connection settings from the selected INI section. `interpolation=None` preserves literal `%` characters in file values, and `quote_plus()` encodes the username and password when building the URI.
 
 Keep `credentials.ini` local. It is ignored by Git; the example contains public dummy values. Mode `600` restricts the local file to its owner, and an INI file stores plaintext.
 
@@ -262,8 +291,8 @@ Keep `credentials.ini` local. It is ignored by Git; the example contains public 
 | --- | --- | --- |
 | 1. MySQL | Start with the supplied MySQL connection | Values in the code |
 | 2. MongoDB | Replace MySQL with the short MongoDB example | Values in the code |
-| 3. Environment | Add `import os`; load two values with `os.getenv()` | Export `MONGO_URI` and `MONGO_DATABASE` |
-| 4. File | Load the same two values with `configparser` | Export `APP_ENV` to select an INI section |
+| 3. Environment | Add `import os`; read four separate values with `os.getenv()` | Export username, password, endpoint and database |
+| 4. File | Read the same four values with `configparser` | Export `APP_ENV` to select an INI section |
 
 Commit the completed `db_connect.py` to your fork. Submit your screenshots, answers and `Lab4_Solution.pdf` to your `DevOps/Labs/Lab04` directory as described in the course lab.
 
@@ -285,6 +314,7 @@ See [VALIDATION.md](VALIDATION.md) for the verification status.
 
 - [MySQL Connector/Python: Connecting to MySQL](https://dev.mysql.com/doc/connector-python/en/connector-python-example-connecting.html)
 - [MongoDB: Connect to MongoDB with PyMongo](https://www.mongodb.com/docs/languages/python/pymongo-driver/current/connect/)
+- [MongoDB: Authentication and URI credential encoding](https://www.mongodb.com/docs/languages/python/pymongo-driver/current/security/authentication/scram/)
 - [Python: os.getenv](https://docs.python.org/3/library/os.html#os.getenv)
 - [Python: configparser](https://docs.python.org/3/library/configparser.html)
 - [Python: virtual environments](https://docs.python.org/3/library/venv.html)

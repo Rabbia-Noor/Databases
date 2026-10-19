@@ -46,9 +46,9 @@ passed = 0
 def profile(name):
     username, password, port = PROFILES[name]
     return {
-        "MONGO_URI": (
-            f"mongodb://{username}:{password}@127.0.0.1:{port}/school_{name}"
-        ),
+        "MONGO_USERNAME": username,
+        "MONGO_PASSWORD": password,
+        "MONGO_ENDPOINT": f"127.0.0.1:{port}",
         "MONGO_DATABASE": f"school_{name}",
     }
 
@@ -99,7 +99,7 @@ with tempfile.TemporaryDirectory(prefix="lab04-connections-") as directory:
     del missing["MONGO_DATABASE"]
     run(
         "mongo_env", "Missing variable rejected", "prod", missing,
-        failure="Set MONGO_URI and MONGO_DATABASE first.",
+        failure="Set all four MongoDB environment variables first.",
     )
 
     credential_path = work / "credentials.ini"
@@ -111,9 +111,9 @@ with tempfile.TemporaryDirectory(prefix="lab04-connections-") as directory:
     )
     credential_path.write_text(valid_credentials)
 
-    # An unset APP_ENV defaults to the dev file section, even with prod URI exports.
+    # An unset APP_ENV defaults to the dev file section, even with prod connection variables.
     run(
-        "mongo_file", "Default dev section ignores prod URI exports",
+        "mongo_file", "Default dev section ignores prod connection variables",
         "dev", profile("prod"),
     )
 

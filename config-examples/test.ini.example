@@ -3,8 +3,8 @@
 environment = test
 
 [mongodb]
-host = mongo-test
-port = 27017
+host = 127.0.0.1
+port = 27018
 database = school_test
 username = test_user
 password = TestDemoOnly123!

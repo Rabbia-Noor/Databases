@@ -30,13 +30,13 @@ def run_case(label, script, *, environment=None, arguments=(), expect_success=Tr
 def main():
     run_case("stage 1: hardcoded MySQL", "01_mysql_hardcoded.py")
     run_case("stage 2: hardcoded MongoDB", "02_mongo_hardcoded.py")
-    profiles = (("dev", "Dev"), ("test", "Test"), ("prod", "Prod"))
-    for name, prefix in profiles:
+    profiles = (("dev", "27017", "Dev"), ("test", "27018", "Test"), ("prod", "27019", "Prod"))
+    for name, port, prefix in profiles:
         environment = os.environ.copy()
         environment.update(
             APP_ENV=name,
-            MONGO_HOST=f"mongo-{name}",
-            MONGO_PORT="27017",
+            MONGO_HOST="127.0.0.1",
+            MONGO_PORT=port,
             MONGO_DATABASE=f"school_{name}",
             MONGO_USERNAME=f"{name}_user",
             MONGO_PASSWORD=f"{prefix}DemoOnly123!",

@@ -9,8 +9,8 @@ def main() -> int:
     connection = None
     try:
         connection = mysql.connector.connect(
-            host="mysql",
-            port=3306,
+            host="127.0.0.1",
+            port=3307,
             database="school_mysql",
             user="mysql_student",
             password="MysqlDemoOnly123!",
@@ -30,7 +30,7 @@ def main() -> int:
             connection.commit()
             cursor.execute("SELECT roll_no, name FROM students ORDER BY roll_no")
             print("Configuration source: hardcoded Python values")
-            print("Connected to: dev | mysql:3306")
+            print("Connected to: dev | 127.0.0.1:3307")
             print("Database: school_mysql | marker: dev")
             for student in cursor.fetchall():
                 print(f"Student: {student['roll_no']} | {student['name']}")

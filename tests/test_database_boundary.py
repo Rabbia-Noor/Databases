@@ -11,7 +11,7 @@ from settings import LabError, MongoSettings
 
 class DatabaseBoundaryTests(unittest.TestCase):
     def settings(self):
-        return MongoSettings("dev", "mongo-dev", 27017, "school_dev", "dev_user", "SECRET_TEST_VALUE", "school_dev")
+        return MongoSettings("dev", "127.0.0.1", 27017, "school_dev", "dev_user", "SECRET_TEST_VALUE", "school_dev")
 
     def client_and_db(self, factory):
         client = factory.return_value.__enter__.return_value

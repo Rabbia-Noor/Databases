@@ -3,8 +3,8 @@
 environment = prod
 
 [mongodb]
-host = mongo-prod
-port = 27017
+host = 127.0.0.1
+port = 27019
 database = school_prod
 username = prod_user
 password = ProdDemoOnly123!

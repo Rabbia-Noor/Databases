@@ -9,7 +9,7 @@ from settings import LabError, MongoSettings
 def main() -> int:
     settings = MongoSettings(
         environment="dev",
-        host="mongo-dev",
+        host="127.0.0.1",
         port=27017,
         database="school_dev",
         username="dev_user",

@@ -1,24 +1,13 @@
 # Validation record
 
-Verified on 19 October 2026. Local preparation used Python 3.12.14, PyMongo 4.19.0, MySQL Connector/Python 9.7.0, and dnspython 2.9.0.
+The current revision runs Python directly on the Ubuntu host. Docker Compose defines only MySQL and the three MongoDB services.
 
-## Live Docker verification
+## Verification
 
-[GitHub Actions run 39249736356](https://github.com/WaqasSaleem97/Databases/actions/runs/39249736356) completed successfully for source commit `44f86b8c8b78d282ef32b426b8af67eca2e50125`.
+- The 15 offline tests cover profile selection, required settings, literal password characters, safe error messages and blocking MongoDB writes when the database marker is wrong or missing.
+- The live smoke test covers eight successful stage/environment combinations and three expected failures, using the host-published ports.
+- The GitHub Actions workflow installs Python drivers on its host runner and runs the same offline and live checks against the database containers.
 
-- Docker Compose configuration validation and the Python application image build passed.
-- All 15 configuration and mocked database-boundary tests passed inside the application container.
-- MySQL and all three MongoDB services started and passed their health checks.
-- Local dummy credential files were prepared successfully through the application container.
-- All 11 live scenarios passed: eight successful stage/environment combinations, wrong-password rejection, missing-password rejection, and blocking a write when the database marker does not match the selected environment.
-- The workflow removed the disposable services and data volumes after verification.
+The preparation machine has no Docker engine. The live result for this host-based revision will be recorded after its GitHub Actions run completes.
 
-## Additional local checks
-
-- All Python files parsed successfully; the MongoDB seed JavaScript passed Node's syntax check.
-- Five Compose services, internal service-name endpoints, loopback-only host bindings, health-check shell syntax, and matching provisioning/profile credentials were checked.
-- Config preparation was run twice; the second run preserved existing files.
-- Screenshot source-viewing commands redact passwords before capture.
-- Lab 4's 37 mandatory evidence filenames, task navigation, submission rules and PDF Git exception were checked.
-
-The preparation machine itself has no Docker engine. Live integration was therefore verified on the GitHub Actions runner. Students should still run the documented Docker setup and `docker compose run --rm app python smoke_test.py` on their own machines before submitting evidence.
+Students can run `python -m unittest discover -s tests -v` and `python smoke_test.py` from their active host virtual environment after starting the databases and preparing the local credential files.

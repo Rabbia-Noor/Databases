@@ -14,7 +14,7 @@ class ConfigTests(unittest.TestCase):
     def env(self):
         return {
             "APP_ENV": "dev",
-            "MONGO_HOST": "mongo-dev",
+            "MONGO_HOST": "127.0.0.1",
             "MONGO_PORT": "27017",
             "MONGO_DATABASE": "school_dev",
             "MONGO_USERNAME": "dev_user",
@@ -65,8 +65,7 @@ class ConfigTests(unittest.TestCase):
                 self.assertEqual(item.database, f"school_{environment}")
                 self.assertEqual(item.auth_source, item.database)
                 settings.append(item)
-        self.assertEqual({item.host for item in settings}, {"mongo-dev", "mongo-test", "mongo-prod"})
-        self.assertEqual({item.port for item in settings}, {27017})
+        self.assertEqual(len({item.port for item in settings}), 3)
         self.assertEqual(len({item.username for item in settings}), 3)
         self.assertEqual(len({item.password for item in settings}), 3)
 

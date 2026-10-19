@@ -1,24 +1,6 @@
 # Disposable local lab only. Every password below is intentionally public dummy data.
-# Run Python through the app container; database service names are its endpoints.
+# Run the Python programs ON THE HOST (or in the same WSL distro as Docker).
 services:
-  app:
-    build: .
-    profiles: ["tools"]
-    init: true
-    working_dir: /app
-    user: "${LAB_UID:-1000}:${LAB_GID:-1000}"
-    volumes:
-      - ./:/app
-    # Pass only the selected deployment's shell values into this process.
-    environment:
-      - APP_ENV
-      - MONGO_HOST
-      - MONGO_PORT
-      - MONGO_DATABASE
-      - MONGO_USERNAME
-      - MONGO_PASSWORD
-      - MONGO_AUTH_SOURCE
-
   mysql:
     image: mysql:8.4
     environment:

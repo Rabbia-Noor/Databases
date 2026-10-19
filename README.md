@@ -25,8 +25,6 @@ Every password committed in this starter is deliberately public, disposable clas
    cd ~
    git clone git@github.com:<your-username>/Databases.git
    cd Databases
-   git remote add upstream https://github.com/WaqasSaleem97/Databases.git
-   git remote -v
    ```
 
 Replace `<your-username>` with your actual GitHub username. `origin` must point to your fork. Use the `DevOps` repository for the screenshot/PDF submission specified by Lab 4.
